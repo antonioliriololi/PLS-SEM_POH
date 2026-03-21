@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador PLS-SEM · AntoMatic</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #000;
+  padding: 24px 20px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+header { border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 28px; }
+header h1 { font-size: 1.25rem; text-transform: uppercase; letter-spacing: 2px; }
+header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
+
+.step { margin-bottom: 28px; }
+.step h2 {
+  font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px;
+  border-left: 4px solid #000; padding-left: 10px; margin-bottom: 12px;
+}
+.step-note { font-size: 0.74rem; color: #888; font-style: italic; margin-bottom: 10px; }
+
+/* PAIRS */
+.pair-row {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
+}
+.pair-num { font-size: 0.7rem; color: #aaa; min-width: 20px; text-align: right; }
+.pair-row input.var-input {
+  flex: 1; font-family: Arial, sans-serif; font-size: 0.87rem;
+  padding: 7px 10px; border: 1px solid #ccc; background: #fff; color: #000;
+}
+.pair-row input.var-input:focus { border-color: #000; outline: none; }
+.pair-row input.var-input::placeholder { color: #bbb; }
+.arrow-lbl { font-size: 1rem; font-weight: bold; padding: 0 2px; color: #000; }
+.btn-rm {
+  font-family: Arial, sans-serif; font-size: 0.78rem; padding: 5px 9px;
+  border: 1px solid #ccc; background: #fff; cursor: pointer; color: #aaa;
+}
+.btn-rm:hover { border-color: #000; color: #000; }
+.btn-add-pair {
+  font-family: Arial, sans-serif; font-size: 0.78rem; font-weight: bold;
+  padding: 7px 14px; border: 1px solid #000; background: #fff;
+  cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;
+}
+.btn-add-pair:hover { background: #f0f0f0; }
+.pair-counter { font-size: 0.7rem; color: #bbb; margin-top: 6px; }
+
+/* MAIN PAIR */
+.main-row { display: flex; align-items: center; gap: 8px; }
+.main-row input {
+  flex: 1; font-family: Arial, sans-serif; font-size: 0.87rem;
+  padding: 8px 10px; border: 2px solid #000; background: #fff; color: #000;
+}
+.main-row input:focus { outline: none; background: #fafafa; }
+.main-row input::placeholder { color: #bbb; }
+
+/* CONTEXT */
+.ctx-grid {
+  display: grid; grid-template-columns: 1fr 0.6fr 1fr 1fr; gap: 12px;
+}
+.grp label {
+  display: block; font-size: 0.7rem; font-weight: bold;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; color: #444;
+}
+.grp input {
+  width: 100%; font-family: Arial, sans-serif; font-size: 0.87rem;
+  padding: 7px 10px; border: 1px solid #ccc; background: #fff; color: #000;
+}
+.grp input:focus { border-color: #000; outline: none; }
+/* Placeholder gris / texto ingresado negro */
+.grp input::placeholder { color: #b0b0b0; }
+.grp input:not(:placeholder-shown) { color: #000; }
+
+/* STYLE CARDS */
+.style-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px;
+  margin-bottom: 14px;
+}
+.scard {
+  border: 1px solid #ccc; padding: 9px 10px; cursor: pointer;
+  transition: border 0.15s; user-select: none;
+}
+.scard:hover { border-color: #000; }
+.scard.sel { border: 2px solid #000; background: #f8f8f8; }
+.scard .snum { font-size: 0.65rem; color: #999; font-weight: bold; text-transform: uppercase; }
+.scard .sname { font-size: 0.78rem; font-weight: bold; margin-top: 2px; line-height: 1.3; }
+.scard .sdesc { font-size: 0.7rem; color: #666; margin-top: 3px; line-height: 1.3; }
+
+.opts-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.chk-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.8rem; cursor: pointer;
+}
+
+/* GENERATE BUTTON */
+.btn-gen {
+  width: 100%; padding: 13px; font-family: Arial, sans-serif;
+  font-size: 0.95rem; font-weight: bold; background: #000; color: #fff;
+  border: none; cursor: pointer; text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 28px;
+}
+.btn-gen:hover { background: #333; }
+
+/* OUTPUT */
+#output { display: none; }
+.out-model-summary {
+  background: #f5f5f5; border-left: 4px solid #000;
+  padding: 10px 14px; margin-bottom: 20px; font-size: 0.78rem;
+}
+.out-model-title { font-weight: bold; text-transform: uppercase; font-size: 0.7rem; color: #888; margin-bottom: 6px; }
+.pair-tag {
+  display: inline-block; border: 1px solid #ccc;
+  padding: 2px 8px; margin: 2px; font-size: 0.78rem; background: #fff;
+}
+.out-sec { margin-bottom: 22px; }
+.out-sec-hdr {
+  background: #000; color: #fff; font-size: 0.72rem;
+  font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;
+  padding: 4px 12px; display: inline-block; margin-bottom: 10px;
+}
+.out-general {
+  font-size: 0.9rem; line-height: 1.7;
+  border-left: 3px solid #000; padding-left: 12px;
+}
+.out-list { list-style: none; padding: 0; counter-reset: item; }
+.out-list li {
+  font-size: 0.87rem; line-height: 1.65;
+  padding: 6px 0 6px 28px; border-bottom: 1px solid #f0f0f0;
+  counter-increment: item; position: relative;
+}
+.out-list li::before {
+  content: counter(item);
+  position: absolute; left: 4px; top: 6px;
+  font-size: 0.7rem; font-weight: bold; color: #bbb;
+}
+.out-list li.ipma-item { background: #fafafa; font-style: italic; }
+
+.action-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; align-items: center; }
+.btn-copy {
+  flex: 1; min-width: 130px; padding: 10px; font-family: Arial, sans-serif;
+  font-size: 0.85rem; font-weight: bold; background: #000; color: #fff;
+  border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+}
+.btn-copy:hover { background: #333; }
+.btn-top {
+  flex: 1; min-width: 130px; padding: 10px; font-family: Arial, sans-serif;
+  font-size: 0.85rem; font-weight: bold; background: #fff; color: #000;
+  border: 2px solid #000; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+}
+.btn-top:hover { background: #f0f0f0; }
+.copy-ok { font-size: 0.75rem; color: #555; display: none; }
+
+footer { margin-top: 36px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.68rem; color: #bbb; text-align: center; }
+@media(max-width:650px){
+  .ctx-grid { grid-template-columns: 1fr 1fr; }
+  .style-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Generador de Problemas, Objetivos e Hipótesis · PLS-SEM</h1>
+  <p>Investigación explicativa · 10 estilos · EPG-UNASAM · AntoMatic Tools</p>
+</header>
+
+<!-- PASO 1 -->
+<div class="step">
+  <h2>Paso 1 · Pares de variables (conexiones del modelo)</h2>
+  <p class="step-note">Ingresa cada relación del modelo. Ejemplo: liderazgo transformacional → desempeño laboral</p>
+  <div id="pairs-container"></div>
+  <button class="btn-add-pair" id="btn-add" onclick="addPair()">+ Agregar par</button>
+  <div class="pair-counter" id="pair-counter">0 / 16 pares</div>
+</div>
+
+<!-- PASO 2 -->
+<div class="step">
+  <h2>Paso 2 · Par principal — Pregunta General y Objetivo General</h2>
+  <p class="step-note">Escribe el nombre global de las variables independientes (izquierda) y la variable dependiente principal (derecha).</p>
+  <div class="main-row">
+    <input type="text" id="main-a" placeholder="Ej: los factores del liderazgo transformacional">
+    <span class="arrow-lbl">→</span>
+    <input type="text" id="main-b" placeholder="Ej: el desempeño laboral">
+  </div>
+</div>
+
+<!-- PASO 3 -->
+<div class="step">
+  <h2>Paso 3 · Contexto</h2>
+  <div class="ctx-grid">
+    <div class="grp">
+      <label>¿De qué organización?</label>
+      <input type="text" id="ctx-org" placeholder="la SUNAT">
+    </div>
+    <div class="grp">
+      <label>¿Qué año?</label>
+      <input type="text" id="ctx-anio" placeholder="2026">
+    </div>
+    <div class="grp">
+      <label>¿De quiénes? (informantes)</label>
+      <input type="text" id="ctx-quienes" placeholder="los colaboradores">
+    </div>
+    <div class="grp">
+      <label>¿Dónde?</label>
+      <input type="text" id="ctx-lugar" placeholder="Huaraz, Áncash">
+    </div>
+  </div>
+</div>
+
+<!-- PASO 4 -->
+<div class="step">
+  <h2>Paso 4 · Estilo de redacción</h2>
+  <div class="style-grid" id="style-grid"></div>
+  <div class="opts-row">
+    <label class="chk-label">
+      <input type="checkbox" id="ipma-chk">
+      Agregar pregunta IPMA (mapa importancia-rendimiento)
+    </label>
+  </div>
+</div>
+
+<button class="btn-gen" onclick="generate()">⚡ Generar Problemas · Objetivos · Hipótesis</button>
+
+<!-- OUTPUT -->
+<div id="output">
+  <div id="out-model" class="out-model-summary" style="display:none"></div>
+  <div id="out-content"></div>
+  <div class="action-row">
+    <button class="btn-copy" onclick="copyAll()">Copiar todo el texto</button>
+    <button class="btn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ Volver arriba</button>
+    <span class="copy-ok" id="copy-ok">✔ Copiado al portapapeles</span>
+  </div>
+</div>
+
+<footer>AntoMatic Tools · EPG-UNASAM · Huaraz, Áncash, Perú</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// UTILIDADES DE TEXTO
+// ══════════════════════════════════════════════════════════════════
+
+// Artículos que NO necesitan ser añadidos
+const ARTS = ['el ','la ','los ','las ','un ','una ','unos ','unas ',
+              'del ','de la ','de los ','de las ','al ','a la ','a los ','a las ',
+              'mi ','su ','sus ','mis ','este ','esta ','ese ','esa ',
+              'nuestro ','nuestra ','nuestros ','nuestras '];
+
+function tieneArticulo(str) {
+  const s = str.toLowerCase().trim();
+  return ARTS.some(a => s.startsWith(a));
+}
+
+// Detecta género/número por terminación y devuelve artículo sugerido
+function detectarArticulo(str) {
+  const s = str.toLowerCase().trim();
+  // Plurales obvios
+  if (s.endsWith('s')) {
+    // femenino plural: -iones, -ades, -tudes
+    if (s.endsWith('ciones') || s.endsWith('siones') || s.endsWith('dades') || s.endsWith('tudes')) return 'las ';
+    // masculino plural general
+    return 'los ';
+  }
+  // Femenino singular
+  const femSuf = ['ión','dad','tad','tud','sis','cia','gia','ría','za','ez','umbre'];
+  if (femSuf.some(f => s.endsWith(f))) return 'la ';
+  // Femenino por -a final (excepto palabras con acento y algunas comunes)
+  if (s.endsWith('a') && !s.endsWith('ma') && !s.endsWith('pa') && !s.endsWith('ta')) return 'la ';
+  // Masculino por defecto
+  return 'el ';
+}
+
+// Agrega artículo si no tiene, capitaliza primera letra
+function conArticulo(str) {
+  const s = str.trim();
+  if (!s) return s;
+  if (tieneArticulo(s)) return s;
+  return detectarArticulo(s) + s;
+}
+
+// Capitaliza primera letra de la oración completa
+function cap(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 10 ESTILOS
+// ══════════════════════════════════════════════════════════════════
+const ESTILOS = [
+  {
+    id:1, short:"Ñaupas", ref:"p.200",
+    desc:"¿Cuál es la influencia de X en Y?",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿Cuál es la influencia de ${mx} en ${my} ${c}?`),
+    pe:(x,y,c)=>cap(`¿Cuál es la influencia de ${x} en ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Determinar la influencia de ${mx} en ${my} ${c}.`),
+    oe:(x,y,c)=>cap(`Determinar la influencia de ${x} en ${y} ${c}.`),
+    he:(x,y,c)=>cap(`${x} tiene una influencia significativa en ${y} ${c}.`),
+  },
+  {
+    id:2, short:"Feras Alnaser", ref:"",
+    desc:"¿En qué medida X influye? / H: existe influencia significativa",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} influyen en ${my} ${c}?`),
+    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Establecer en qué medida ${mx} influyen en ${my} ${c}.`),
+    oe:(x,y,c)=>cap(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>cap(`Existe una influencia significativa de ${x} sobre ${y} ${c}.`),
+  },
+  {
+    id:3, short:"Ken Wong", ref:"",
+    desc:"¿En qué medida X influye? / H: influye significativamente",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} influyen en ${my} ${c}?`),
+    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Establecer en qué medida ${mx} influyen en ${my} ${c}.`),
+    oe:(x,y,c)=>cap(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>cap(`${x} influye significativamente en ${y} ${c}.`),
+  },
+  {
+    id:4, short:"Y explicado por X", ref:"",
+    desc:"¿En qué medida Y es explicado por X?",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿En qué medida ${my} es explicado por ${mx} ${c}?`),
+    pe:(x,y,c)=>cap(`¿En qué medida ${y} es explicado por ${x} ${c}?`),
+    og:(mx,my,c)=>cap(`Establecer en qué medida ${my} es explicado por ${mx} ${c}.`),
+    oe:(x,y,c)=>cap(`Establecer cómo ${y} es explicado por ${x} ${c}.`),
+    he:(x,y,c)=>cap(`${y} es explicado positiva y significativamente por ${x} ${c}.`),
+  },
+  {
+    id:5, short:"Contribuye", ref:"Charmele",
+    desc:"¿En qué medida X contribuye a Y?",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} contribuyen a ${my} ${c}?`),
+    pe:(x,y,c)=>cap(`¿En qué medida ${x} contribuye a ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Determinar la medida en que ${mx} contribuyen a ${my} ${c}.`),
+    oe:(x,y,c)=>cap(`Establecer cómo ${x} contribuye a ${y} ${c}.`),
+    he:(x,y,c)=>cap(`${x} contribuye de manera significativa a ${y} ${c}.`),
+  },
+  {
+    id:6, short:"Incide", ref:"Charmele",
+    desc:"¿En qué medida X incide en Y?",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} inciden en ${my} ${c}?`),
+    pe:(x,y,c)=>cap(`¿En qué medida ${x} incide en ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Establecer cómo ${mx} inciden en ${my} ${c}.`),
+    oe:(x,y,c)=>cap(`Establecer cómo ${x} incide en ${y} ${c}.`),
+    he:(x,y,c)=>cap(`${x} tiene un efecto directo positivo sobre ${y} ${c}.`),
+  },
+  {
+    id:7, short:"De qué manera", ref:"Villanueva",
+    desc:"¿De qué manera X incide en Y?",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿De qué manera ${mx} inciden en ${my} ${c}?`),
+    pe:(x,y,c)=>cap(`¿De qué manera ${x} incide en ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Analizar los factores de ${mx} y su incidencia en ${my} ${c}.`),
+    oe:(x,y,c)=>cap(`Analizar ${x} y su incidencia en ${y} ${c}.`),
+    he:(x,y,c)=>cap(`${x} incide en ${y} ${c}.`),
+  },
+  {
+    id:8, short:"Factores que influyen", ref:"",
+    desc:"¿Qué factores de X influyen en Y?",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿Qué factores de ${mx} influyen en ${my} ${c}?`),
+    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Establecer los factores de ${mx} que influyen en ${my} ${c}.`),
+    oe:(x,y,c)=>cap(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>cap(`Existe una influencia significativa de ${x} sobre ${y} ${c}.`),
+  },
+  {
+    id:9, short:"Adopción de medidas", ref:"Dimensiones",
+    desc:"¿Tiene influencia la adopción de medidas de X en Y?",
+    hasGeneral:true,
+    pg:(mx,my,c)=>cap(`¿Tiene una influencia la adopción de medidas de ${mx} en ${my} ${c}?`),
+    pe:(x,y,c,mx)=>cap(`¿Tiene una influencia la adopción de medidas de ${mx} en la dimensión ${x} en ${y} ${c}?`),
+    og:(mx,my,c)=>cap(`Comprobar si ${mx} en todas sus dimensiones tiene una influencia positiva en ${my} ${c}.`),
+    oe:(x,y,c,mx)=>cap(`Comprobar si ${mx} en su dimensión ${x} tiene una influencia positiva en ${y} ${c}.`),
+    he:(x,y,c,mx)=>cap(`La adopción de medidas de ${mx} en su dimensión ${x} tiene una influencia positiva en ${y} ${c}.`),
+  },
+  {
+    id:10, short:"Eiffel / Mediación", ref:"Basbeth",
+    desc:"Modelo con variable mediadora (sin P/O general)",
+    hasGeneral:false,
+    pg:null,
+    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    og:null,
+    oe:(x,y,c)=>cap(`Establecer cómo ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>cap(`${x} tiene un efecto significativo sobre ${y} ${c}.`),
+  },
+];
+
+const IPMA_PE = (my,c)=>cap(`¿Cuál es el constructo que debe priorizarse (del mapa importancia-rendimiento) para mejorar el desempeño del constructo objetivo de ${my} ${c}?`);
+const IPMA_OE = (my,c)=>cap(`Identificar el constructo que debe priorizarse (del mapa importancia-rendimiento) para mejorar el desempeño del constructo objetivo de ${my} ${c}.`);
+
+// ══════════════════════════════════════════════════════════════════
+// PARES
+// ══════════════════════════════════════════════════════════════════
+let pairN = 0;
+const MAX = 16;
+
+function addPair() {
+  const n = document.querySelectorAll('.pair-row').length;
+  if (n >= MAX) return;
+  pairN++;
+  const c = document.getElementById('pairs-container');
+  const d = document.createElement('div');
+  d.className = 'pair-row';
+  d.innerHTML = `
+    <span class="pair-num">${n+1}</span>
+    <input type="text" class="var-input var-a" placeholder="Variable X (ej: liderazgo transformacional)">
+    <span class="arrow-lbl">→</span>
+    <input type="text" class="var-input var-b" placeholder="Variable Y (ej: desempeño laboral)">
+    <button class="btn-rm" onclick="removePair(this)" title="Eliminar par">✕</button>`;
+  c.appendChild(d);
+  d.querySelector('.var-a').focus();
+  updateCounter();
+}
+
+function removePair(btn) {
+  btn.closest('.pair-row').remove();
+  renumber();
+  updateCounter();
+}
+
+function renumber() {
+  document.querySelectorAll('.pair-row').forEach((r,i)=>{
+    r.querySelector('.pair-num').textContent = i+1;
+  });
+}
+
+function updateCounter() {
+  const n = document.querySelectorAll('.pair-row').length;
+  document.getElementById('pair-counter').textContent = `${n} / ${MAX} pares`;
+  document.getElementById('btn-add').disabled = n >= MAX;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STYLE CARDS
+// ══════════════════════════════════════════════════════════════════
+let selStyle = 1;
+
+function buildCards() {
+  const g = document.getElementById('style-grid');
+  ESTILOS.forEach(e => {
+    const d = document.createElement('div');
+    d.className = 'scard' + (e.id===1?' sel':'');
+    d.onclick = () => pickStyle(e.id);
+    d.innerHTML = `
+      <div class="snum">Estilo ${e.id} ${e.ref?'· '+e.ref:''}</div>
+      <div class="sname">${e.short}</div>
+      <div class="sdesc">${e.desc}</div>`;
+    g.appendChild(d);
+  });
+}
+
+function pickStyle(id) {
+  selStyle = id;
+  document.querySelectorAll('.scard').forEach((c,i)=>{
+    c.classList.toggle('sel', ESTILOS[i].id===id);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GENERATE
+// ══════════════════════════════════════════════════════════════════
+function generate() {
+  const rows = [...document.querySelectorAll('.pair-row')];
+  const pairsRaw = rows.map(r=>([
+    r.querySelector('.var-a').value.trim(),
+    r.querySelector('.var-b').value.trim()
+  ])).filter(([a,b])=>a&&b);
+
+  if (!pairsRaw.length) { alert('Ingresa al menos un par de variables con ambos campos completados.'); return; }
+
+  // Aplicar artículos automáticos a cada variable
+  const pairs = pairsRaw.map(([a,b]) => [conArticulo(a), conArticulo(b)]);
+
+  const mainARaw = document.getElementById('main-a').value.trim();
+  const mainBRaw = document.getElementById('main-b').value.trim();
+  const mainA    = conArticulo(mainARaw);
+  const mainB    = conArticulo(mainBRaw);
+
+  const org     = document.getElementById('ctx-org').value.trim()     || '[organización]';
+  const anio    = document.getElementById('ctx-anio').value.trim()    || '[año]';
+  const quienes = document.getElementById('ctx-quienes').value.trim() || '[quiénes]';
+  const lugar   = document.getElementById('ctx-lugar').value.trim()   || '[lugar]';
+  const ipma    = document.getElementById('ipma-chk').checked;
+  const e       = ESTILOS.find(x=>x.id===selStyle);
+
+  const ctx  = `de ${quienes} de ${org}, ${lugar}, ${anio}`;
+  const refY = mainB || (pairs[0]?pairs[0][1]:'[variable dependiente]');
+
+  // Extraer mainA sin artículo para estilo 9 (dimensiones)
+  const mainARaw2 = mainA;
+
+  let html = '';
+  let plain = '';
+
+  // Resumen del modelo
+  const modelHTML = pairs.map(([a,b])=>`<span class="pair-tag">${a} → ${b}</span>`).join(' ');
+  document.getElementById('out-model').innerHTML =
+    `<div class="out-model-title">Modelo ingresado · ${pairs.length} par(es) · Estilo ${e.id}: ${e.short}</div>${modelHTML}`;
+  document.getElementById('out-model').style.display = 'block';
+
+  // ── PROBLEMA GENERAL ──
+  if (e.hasGeneral && mainA && mainB) {
+    const t = e.pg(mainA, mainB, ctx);
+    html  += sec('PROBLEMA GENERAL', `<div class="out-general">${t}</div>`);
+    plain += `PROBLEMA GENERAL\n${t}\n\n`;
+  }
+
+  // ── PROBLEMAS ESPECÍFICOS ──
+  let peHtml='', peText='', n=0;
+  pairs.forEach(([a,b])=>{
+    n++;
+    const t = e.id===9 ? e.pe(a,b,ctx,mainARaw2) : e.pe(a,b,ctx);
+    peHtml += `<li>${t}</li>`;
+    peText += `${n}. ${t}\n`;
+  });
+  if (ipma && selStyle!==10) {
+    n++;
+    const t = IPMA_PE(refY, ctx);
+    peHtml += `<li class="ipma-item">${t}</li>`;
+    peText += `${n}. ${t}\n`;
+  }
+  html  += sec('PROBLEMAS ESPECÍFICOS', `<ol class="out-list">${peHtml}</ol>`);
+  plain += `PROBLEMAS ESPECÍFICOS\n${peText}\n`;
+
+  // ── OBJETIVO GENERAL ──
+  if (e.hasGeneral && mainA && mainB) {
+    const t = e.og(mainA, mainB, ctx);
+    html  += sec('OBJETIVO GENERAL', `<div class="out-general">${t}</div>`);
+    plain += `OBJETIVO GENERAL\n${t}\n\n`;
+  }
+
+  // ── OBJETIVOS ESPECÍFICOS ──
+  let oeHtml='', oeText=''; n=0;
+  pairs.forEach(([a,b])=>{
+    n++;
+    const t = e.id===9 ? e.oe(a,b,ctx,mainARaw2) : e.oe(a,b,ctx);
+    oeHtml += `<li>${t}</li>`;
+    oeText += `${n}. ${t}\n`;
+  });
+  if (ipma && selStyle!==10) {
+    n++;
+    const t = IPMA_OE(refY, ctx);
+    oeHtml += `<li class="ipma-item">${t}</li>`;
+    oeText += `${n}. ${t}\n`;
+  }
+  html  += sec('OBJETIVOS ESPECÍFICOS', `<ol class="out-list">${oeHtml}</ol>`);
+  plain += `OBJETIVOS ESPECÍFICOS\n${oeText}\n`;
+
+  // ── HIPÓTESIS ESPECÍFICAS ──
+  let heHtml='', heText=''; n=0;
+  pairs.forEach(([a,b])=>{
+    n++;
+    const t = e.id===9 ? e.he(a,b,ctx,mainARaw2) : e.he(a,b,ctx);
+    heHtml += `<li>${t}</li>`;
+    heText += `${n}. ${t}\n`;
+  });
+  html  += sec('HIPÓTESIS ESPECÍFICAS', `<ol class="out-list">${heHtml}</ol>`);
+  plain += `HIPÓTESIS ESPECÍFICAS\n${heText}`;
+
+  document.getElementById('out-content').innerHTML = html;
+  document.getElementById('output').dataset.plain = plain;
+  document.getElementById('output').style.display = 'block';
+  document.getElementById('copy-ok').style.display = 'none';
+  document.getElementById('output').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function sec(titulo, contenido) {
+  return `<div class="out-sec">
+    <div class="out-sec-hdr">${titulo}</div>
+    ${contenido}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COPY
+// ══════════════════════════════════════════════════════════════════
+function copyAll() {
+  const t = document.getElementById('output').dataset.plain || '';
+  navigator.clipboard.writeText(t).then(()=>{
+    const m = document.getElementById('copy-ok');
+    m.style.display = 'inline';
+    setTimeout(()=> m.style.display='none', 2500);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+window.onload = () => {
+  buildCards();
+  addPair();
+  addPair();
+  addPair();
+};
+</script>
+</body>
+</html>
