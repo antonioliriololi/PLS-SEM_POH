@@ -72,7 +72,6 @@ header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
   padding: 7px 10px; border: 1px solid #ccc; background: #fff; color: #000;
 }
 .grp input:focus { border-color: #000; outline: none; }
-/* Placeholder gris / texto ingresado negro */
 .grp input::placeholder { color: #b0b0b0; }
 .grp input:not(:placeholder-shown) { color: #000; }
 
@@ -244,7 +243,6 @@ footer { margin-top: 36px; padding-top: 10px; border-top: 1px solid #eee; font-s
 // UTILIDADES DE TEXTO
 // ══════════════════════════════════════════════════════════════════
 
-// Artículos que NO necesitan ser añadidos
 const ARTS = ['el ','la ','los ','las ','un ','una ','unos ','unas ',
               'del ','de la ','de los ','de las ','al ','a la ','a los ','a las ',
               'mi ','su ','sus ','mis ','este ','esta ','ese ','esa ',
@@ -255,26 +253,25 @@ function tieneArticulo(str) {
   return ARTS.some(a => s.startsWith(a));
 }
 
-// Detecta género/número por terminación y devuelve artículo sugerido
+// ── FIX 1: Detecta género/número con mejor cobertura de femeninos ──
 function detectarArticulo(str) {
   const s = str.toLowerCase().trim();
-  // Plurales obvios
-  if (s.endsWith('s')) {
-    // femenino plural: -iones, -ades, -tudes
-    if (s.endsWith('ciones') || s.endsWith('siones') || s.endsWith('dades') || s.endsWith('tudes')) return 'las ';
-    // masculino plural general
-    return 'los ';
-  }
-  // Femenino singular
-  const femSuf = ['ión','dad','tad','tud','sis','cia','gia','ría','za','ez','umbre'];
+  // Femenino plural: terminación -as (prácticas, competencias, estrategias…)
+  if (s.endsWith('as')) return 'las ';
+  // Femenino plural por sufijos reconocibles
+  if (s.endsWith('iones') || s.endsWith('dades') || s.endsWith('tudes') ||
+      s.endsWith('cias') || s.endsWith('gias') || s.endsWith('ezas')) return 'las ';
+  // Masculino plural general (termina en -s / -es)
+  if (s.endsWith('s')) return 'los ';
+  // Femenino singular por sufijos
+  const femSuf = ['ión','dad','tad','tud','sis','cia','gia','ría','za','ez','umbre','eza'];
   if (femSuf.some(f => s.endsWith(f))) return 'la ';
-  // Femenino por -a final (excepto palabras con acento y algunas comunes)
+  // Femenino singular por -a final
   if (s.endsWith('a') && !s.endsWith('ma') && !s.endsWith('pa') && !s.endsWith('ta')) return 'la ';
   // Masculino por defecto
   return 'el ';
 }
 
-// Agrega artículo si no tiene, capitaliza primera letra
 function conArticulo(str) {
   const s = str.trim();
   if (!s) return s;
@@ -282,10 +279,14 @@ function conArticulo(str) {
   return detectarArticulo(s) + s;
 }
 
-// Capitaliza primera letra de la oración completa
 function cap(str) {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ── FIX 2: Contracción "de el" → "del" ──
+function fixDeEl(str) {
+  return str.replace(/\bde el\b/gi, 'del');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -477,7 +478,6 @@ function generate() {
 
   if (!pairsRaw.length) { alert('Ingresa al menos un par de variables con ambos campos completados.'); return; }
 
-  // Aplicar artículos automáticos a cada variable
   const pairs = pairsRaw.map(([a,b]) => [conArticulo(a), conArticulo(b)]);
 
   const mainARaw = document.getElementById('main-a').value.trim();
@@ -494,8 +494,6 @@ function generate() {
 
   const ctx  = `de ${quienes} de ${org}, ${lugar}, ${anio}`;
   const refY = mainB || (pairs[0]?pairs[0][1]:'[variable dependiente]');
-
-  // Extraer mainA sin artículo para estilo 9 (dimensiones)
   const mainARaw2 = mainA;
 
   let html = '';
@@ -507,64 +505,68 @@ function generate() {
     `<div class="out-model-title">Modelo ingresado · ${pairs.length} par(es) · Estilo ${e.id}: ${e.short}</div>${modelHTML}`;
   document.getElementById('out-model').style.display = 'block';
 
+  // ── FIX 3: Títulos en formato oración ──
+  // (el CSS text-transform:uppercase los mostrará en mayúsculas visualmente,
+  //  pero el texto real y el copiado usarán formato oración)
+
   // ── PROBLEMA GENERAL ──
   if (e.hasGeneral && mainA && mainB) {
-    const t = e.pg(mainA, mainB, ctx);
-    html  += sec('PROBLEMA GENERAL', `<div class="out-general">${t}</div>`);
-    plain += `PROBLEMA GENERAL\n${t}\n\n`;
+    const t = fixDeEl(e.pg(mainA, mainB, ctx));
+    html  += sec('Problema general', `<div class="out-general">${t}</div>`);
+    plain += `Problema general\n${t}\n\n`;
   }
 
   // ── PROBLEMAS ESPECÍFICOS ──
   let peHtml='', peText='', n=0;
   pairs.forEach(([a,b])=>{
     n++;
-    const t = e.id===9 ? e.pe(a,b,ctx,mainARaw2) : e.pe(a,b,ctx);
+    const t = fixDeEl(e.id===9 ? e.pe(a,b,ctx,mainARaw2) : e.pe(a,b,ctx));
     peHtml += `<li>${t}</li>`;
     peText += `${n}. ${t}\n`;
   });
   if (ipma && selStyle!==10) {
     n++;
-    const t = IPMA_PE(refY, ctx);
+    const t = fixDeEl(IPMA_PE(refY, ctx));
     peHtml += `<li class="ipma-item">${t}</li>`;
     peText += `${n}. ${t}\n`;
   }
-  html  += sec('PROBLEMAS ESPECÍFICOS', `<ol class="out-list">${peHtml}</ol>`);
-  plain += `PROBLEMAS ESPECÍFICOS\n${peText}\n`;
+  html  += sec('Problemas específicos', `<ol class="out-list">${peHtml}</ol>`);
+  plain += `Problemas específicos\n${peText}\n`;
 
   // ── OBJETIVO GENERAL ──
   if (e.hasGeneral && mainA && mainB) {
-    const t = e.og(mainA, mainB, ctx);
-    html  += sec('OBJETIVO GENERAL', `<div class="out-general">${t}</div>`);
-    plain += `OBJETIVO GENERAL\n${t}\n\n`;
+    const t = fixDeEl(e.og(mainA, mainB, ctx));
+    html  += sec('Objetivo general', `<div class="out-general">${t}</div>`);
+    plain += `Objetivo general\n${t}\n\n`;
   }
 
   // ── OBJETIVOS ESPECÍFICOS ──
   let oeHtml='', oeText=''; n=0;
   pairs.forEach(([a,b])=>{
     n++;
-    const t = e.id===9 ? e.oe(a,b,ctx,mainARaw2) : e.oe(a,b,ctx);
+    const t = fixDeEl(e.id===9 ? e.oe(a,b,ctx,mainARaw2) : e.oe(a,b,ctx));
     oeHtml += `<li>${t}</li>`;
     oeText += `${n}. ${t}\n`;
   });
   if (ipma && selStyle!==10) {
     n++;
-    const t = IPMA_OE(refY, ctx);
+    const t = fixDeEl(IPMA_OE(refY, ctx));
     oeHtml += `<li class="ipma-item">${t}</li>`;
     oeText += `${n}. ${t}\n`;
   }
-  html  += sec('OBJETIVOS ESPECÍFICOS', `<ol class="out-list">${oeHtml}</ol>`);
-  plain += `OBJETIVOS ESPECÍFICOS\n${oeText}\n`;
+  html  += sec('Objetivos específicos', `<ol class="out-list">${oeHtml}</ol>`);
+  plain += `Objetivos específicos\n${oeText}\n`;
 
   // ── HIPÓTESIS ESPECÍFICAS ──
   let heHtml='', heText=''; n=0;
   pairs.forEach(([a,b])=>{
     n++;
-    const t = e.id===9 ? e.he(a,b,ctx,mainARaw2) : e.he(a,b,ctx);
+    const t = fixDeEl(e.id===9 ? e.he(a,b,ctx,mainARaw2) : e.he(a,b,ctx));
     heHtml += `<li>${t}</li>`;
     heText += `${n}. ${t}\n`;
   });
-  html  += sec('HIPÓTESIS ESPECÍFICAS', `<ol class="out-list">${heHtml}</ol>`);
-  plain += `HIPÓTESIS ESPECÍFICAS\n${heText}`;
+  html  += sec('Hipótesis específicas', `<ol class="out-list">${heHtml}</ol>`);
+  plain += `Hipótesis específicas\n${heText}`;
 
   document.getElementById('out-content').innerHTML = html;
   document.getElementById('output').dataset.plain = plain;
