@@ -25,7 +25,6 @@ header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
 }
 .step-note { font-size: 0.74rem; color: #888; font-style: italic; margin-bottom: 10px; }
 
-/* PAIRS */
 .pair-row {
   display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
 }
@@ -50,7 +49,6 @@ header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
 .btn-add-pair:hover { background: #f0f0f0; }
 .pair-counter { font-size: 0.7rem; color: #bbb; margin-top: 6px; }
 
-/* MAIN PAIR */
 .main-row { display: flex; align-items: center; gap: 8px; }
 .main-row input {
   flex: 1; font-family: Arial, sans-serif; font-size: 0.87rem;
@@ -59,7 +57,6 @@ header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
 .main-row input:focus { outline: none; background: #fafafa; }
 .main-row input::placeholder { color: #bbb; }
 
-/* CONTEXT */
 .ctx-grid {
   display: grid; grid-template-columns: 1fr 0.6fr 1fr 1fr; gap: 12px;
 }
@@ -75,7 +72,6 @@ header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
 .grp input::placeholder { color: #b0b0b0; }
 .grp input:not(:placeholder-shown) { color: #000; }
 
-/* STYLE CARDS */
 .style-grid {
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px;
   margin-bottom: 14px;
@@ -96,7 +92,6 @@ header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
   font-size: 0.8rem; cursor: pointer;
 }
 
-/* GENERATE BUTTON */
 .btn-gen {
   width: 100%; padding: 13px; font-family: Arial, sans-serif;
   font-size: 0.95rem; font-weight: bold; background: #000; color: #fff;
@@ -105,7 +100,6 @@ header p  { font-size: 0.76rem; color: #555; margin-top: 4px; }
 }
 .btn-gen:hover { background: #333; }
 
-/* OUTPUT */
 #output { display: none; }
 .out-model-summary {
   background: #f5f5f5; border-left: 4px solid #000;
@@ -165,30 +159,27 @@ footer { margin-top: 36px; padding-top: 10px; border-top: 1px solid #eee; font-s
 
 <header>
   <h1>Generador de Problemas, Objetivos e Hipótesis · PLS-SEM</h1>
-  <p>Investigación explicativa · 10 estilos · EPG-UNASAM · AntoMatic Tools</p>
+  <p>Investigación explicativa · 10 estilos · AntoMatic Tools · v3</p>
 </header>
 
-<!-- PASO 1 -->
 <div class="step">
   <h2>Paso 1 · Pares de variables (conexiones del modelo)</h2>
-  <p class="step-note">Ingresa cada relación del modelo. Ejemplo: liderazgo transformacional → desempeño laboral</p>
+  <p class="step-note">Ingresa cada relación del modelo. Ejemplo: el liderazgo transformacional → el desempeño laboral</p>
   <div id="pairs-container"></div>
   <button class="btn-add-pair" id="btn-add" onclick="addPair()">+ Agregar par</button>
   <div class="pair-counter" id="pair-counter">0 / 16 pares</div>
 </div>
 
-<!-- PASO 2 -->
 <div class="step">
   <h2>Paso 2 · Par principal — Pregunta General y Objetivo General</h2>
-  <p class="step-note">Escribe el nombre global de las variables independientes (izquierda) y la variable dependiente principal (derecha).</p>
+  <p class="step-note">Escribe el nombre global de las variables independientes con su artículo (izquierda) y la variable dependiente principal con su artículo (derecha). Ejemplo: las prácticas de gestión → el desempeño laboral</p>
   <div class="main-row">
-    <input type="text" id="main-a" placeholder="Ej: los factores del liderazgo transformacional">
+    <input type="text" id="main-a" placeholder="Ej: las prácticas de gestión del talento">
     <span class="arrow-lbl">→</span>
     <input type="text" id="main-b" placeholder="Ej: el desempeño laboral">
   </div>
 </div>
 
-<!-- PASO 3 -->
 <div class="step">
   <h2>Paso 3 · Contexto</h2>
   <div class="ctx-grid">
@@ -211,7 +202,6 @@ footer { margin-top: 36px; padding-top: 10px; border-top: 1px solid #eee; font-s
   </div>
 </div>
 
-<!-- PASO 4 -->
 <div class="step">
   <h2>Paso 4 · Estilo de redacción</h2>
   <div class="style-grid" id="style-grid"></div>
@@ -225,7 +215,6 @@ footer { margin-top: 36px; padding-top: 10px; border-top: 1px solid #eee; font-s
 
 <button class="btn-gen" onclick="generate()">⚡ Generar Problemas · Objetivos · Hipótesis</button>
 
-<!-- OUTPUT -->
 <div id="output">
   <div id="out-model" class="out-model-summary" style="display:none"></div>
   <div id="out-content"></div>
@@ -236,7 +225,7 @@ footer { margin-top: 36px; padding-top: 10px; border-top: 1px solid #eee; font-s
   </div>
 </div>
 
-<footer>AntoMatic Tools · idea de Antonio Lirio · Huaraz, Áncash, Perú</footer>
+<footer>AntoMatic Tools · idea de Antonio Lirio v3 · Huaraz, Áncash, Perú</footer>
 
 <script>
 // ══════════════════════════════════════════════════════════════════
@@ -253,21 +242,50 @@ function tieneArticulo(str) {
   return ARTS.some(a => s.startsWith(a));
 }
 
-// ── FIX 1: Detecta género/número con mejor cobertura de femeninos ──
+// ── FIX 1: Se analiza la PRIMERA PALABRA para determinar el artículo ──
+// Antes se miraba el último carácter de toda la frase (bug: "prácticas de gestión"
+// terminaba en "n" y se asignaba "el" en vez de "las").
 function detectarArticulo(str) {
   const s = str.toLowerCase().trim();
-  // Femenino plural: terminación -as (prácticas, competencias, estrategias…)
-  if (s.endsWith('as')) return 'las ';
+  // Tomar solo la primera palabra para detectar género/número
+  const primera = s.split(/\s+/)[0];
+
+  // Excepciones: masculinos de origen griego terminados en -ma (plural -mas)
+  // aunque terminan en -as, son masculinos: sistemas, programas, temas, etc.
+  const mascMa = ['sistemas','programas','temas','problemas','esquemas',
+                  'dilemas','traumas','poemas','idiomas','aromas','climas',
+                  'dramas','panoramas','diagramas','paradigmas','axiomas',
+                  'teoremas','emblemas','estigmas','fantasmas'];
+  if (mascMa.includes(primera)) return 'los ';
+
+  // Femenino plural: primera palabra termina en -as
+  if (primera.endsWith('as')) return 'las ';
+
   // Femenino plural por sufijos reconocibles
-  if (s.endsWith('iones') || s.endsWith('dades') || s.endsWith('tudes') ||
-      s.endsWith('cias') || s.endsWith('gias') || s.endsWith('ezas')) return 'las ';
-  // Masculino plural general (termina en -s / -es)
-  if (s.endsWith('s')) return 'los ';
+  if (primera.endsWith('iones') || primera.endsWith('siones') ||
+      primera.endsWith('dades') || primera.endsWith('tudes') ||
+      primera.endsWith('cias')  || primera.endsWith('gias')  ||
+      primera.endsWith('uras')  || primera.endsWith('ezas')  ||
+      primera.endsWith('eras')) return 'las ';
+
+  // Masculino plural: primera palabra termina en -os o -es/s genérico
+  if (primera.endsWith('os')) return 'los ';
+  if (primera.endsWith('es') || primera.endsWith('s')) return 'los ';
+
   // Femenino singular por sufijos
-  const femSuf = ['ión','dad','tad','tud','sis','cia','gia','ría','za','ez','umbre','eza'];
-  if (femSuf.some(f => s.endsWith(f))) return 'la ';
-  // Femenino singular por -a final
-  if (s.endsWith('a') && !s.endsWith('ma') && !s.endsWith('pa') && !s.endsWith('ta')) return 'la ';
+  const femSuf = ['ión','dad','tad','tud','sis','cia','gia','ría','za','ez','umbre','eza','ura'];
+  if (femSuf.some(f => primera.endsWith(f))) return 'la ';
+
+  // Femenino singular: primera palabra termina en -a
+  // Excepciones masculinas en -ma singular (sistema, programa, tema…)
+  const mascMaSing = ['sistema','programa','tema','problema','esquema',
+                      'dilema','trauma','poema','idioma','aroma','clima',
+                      'drama','panorama','diagrama','paradigma','axioma',
+                      'teorema','emblema','estigma','fantasma'];
+  if (primera.endsWith('a') && !mascMaSing.includes(primera) &&
+      !primera.endsWith('ma') && !primera.endsWith('pa') &&
+      !primera.endsWith('ta') && !primera.endsWith('ca')) return 'la ';
+
   // Masculino por defecto
   return 'el ';
 }
@@ -284,9 +302,15 @@ function cap(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// ── FIX 2: Contracción "de el" → "del" ──
+// ── FIX 2: Contracción obligatoria "de el" → "del" ──
 function fixDeEl(str) {
+  // Reemplaza "de el" (con espacio) por "del", insensible a mayúsculas
   return str.replace(/\bde el\b/gi, 'del');
+}
+
+// Aplica fixDeEl + cap en un solo paso
+function t(str) {
+  return cap(fixDeEl(str));
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -297,106 +321,117 @@ const ESTILOS = [
     id:1, short:"Ñaupas", ref:"p.200",
     desc:"¿Cuál es la influencia de X en Y?",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿Cuál es la influencia de ${mx} en ${my} ${c}?`),
-    pe:(x,y,c)=>cap(`¿Cuál es la influencia de ${x} en ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Determinar la influencia de ${mx} en ${my} ${c}.`),
-    oe:(x,y,c)=>cap(`Determinar la influencia de ${x} en ${y} ${c}.`),
-    he:(x,y,c)=>cap(`${x} tiene una influencia significativa en ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿Cuál es la influencia de ${mx} en ${my} ${c}?`),
+    pe:(x,y,c)=>t(`¿Cuál es la influencia de ${x} en ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Determinar la influencia de ${mx} en ${my} ${c}.`),
+    oe:(x,y,c)=>t(`Determinar la influencia de ${x} en ${y} ${c}.`),
+    he:(x,y,c)=>t(`${x} tiene una influencia significativa en ${y} ${c}.`),
   },
   {
     id:2, short:"Feras Alnaser", ref:"",
     desc:"¿En qué medida X influye? / H: existe influencia significativa",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} influyen en ${my} ${c}?`),
-    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Establecer en qué medida ${mx} influyen en ${my} ${c}.`),
-    oe:(x,y,c)=>cap(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
-    he:(x,y,c)=>cap(`Existe una influencia significativa de ${x} sobre ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿En qué medida ${mx} influyen en ${my} ${c}?`),
+    pe:(x,y,c)=>t(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Establecer en qué medida ${mx} influyen en ${my} ${c}.`),
+    oe:(x,y,c)=>t(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>t(`Existe una influencia significativa de ${x} sobre ${y} ${c}.`),
   },
   {
     id:3, short:"Ken Wong", ref:"",
     desc:"¿En qué medida X influye? / H: influye significativamente",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} influyen en ${my} ${c}?`),
-    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Establecer en qué medida ${mx} influyen en ${my} ${c}.`),
-    oe:(x,y,c)=>cap(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
-    he:(x,y,c)=>cap(`${x} influye significativamente en ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿En qué medida ${mx} influyen en ${my} ${c}?`),
+    pe:(x,y,c)=>t(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Establecer en qué medida ${mx} influyen en ${my} ${c}.`),
+    oe:(x,y,c)=>t(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>t(`${x} influye significativamente en ${y} ${c}.`),
   },
   {
     id:4, short:"Y explicado por X", ref:"",
     desc:"¿En qué medida Y es explicado por X?",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿En qué medida ${my} es explicado por ${mx} ${c}?`),
-    pe:(x,y,c)=>cap(`¿En qué medida ${y} es explicado por ${x} ${c}?`),
-    og:(mx,my,c)=>cap(`Establecer en qué medida ${my} es explicado por ${mx} ${c}.`),
-    oe:(x,y,c)=>cap(`Establecer cómo ${y} es explicado por ${x} ${c}.`),
-    he:(x,y,c)=>cap(`${y} es explicado positiva y significativamente por ${x} ${c}.`),
+    pg:(mx,my,c)=>t(`¿En qué medida ${my} es explicado por ${mx} ${c}?`),
+    pe:(x,y,c)=>t(`¿En qué medida ${y} es explicado por ${x} ${c}?`),
+    og:(mx,my,c)=>t(`Establecer en qué medida ${my} es explicado por ${mx} ${c}.`),
+    oe:(x,y,c)=>t(`Establecer cómo ${y} es explicado por ${x} ${c}.`),
+    he:(x,y,c)=>t(`${y} es explicado positiva y significativamente por ${x} ${c}.`),
   },
   {
     id:5, short:"Contribuye", ref:"Charmele",
     desc:"¿En qué medida X contribuye a Y?",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} contribuyen a ${my} ${c}?`),
-    pe:(x,y,c)=>cap(`¿En qué medida ${x} contribuye a ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Determinar la medida en que ${mx} contribuyen a ${my} ${c}.`),
-    oe:(x,y,c)=>cap(`Establecer cómo ${x} contribuye a ${y} ${c}.`),
-    he:(x,y,c)=>cap(`${x} contribuye de manera significativa a ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿En qué medida ${mx} contribuyen a ${my} ${c}?`),
+    pe:(x,y,c)=>t(`¿En qué medida ${x} contribuye a ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Determinar la medida en que ${mx} contribuyen a ${my} ${c}.`),
+    oe:(x,y,c)=>t(`Establecer cómo ${x} contribuye a ${y} ${c}.`),
+    he:(x,y,c)=>t(`${x} contribuye de manera significativa a ${y} ${c}.`),
   },
   {
     id:6, short:"Incide", ref:"Charmele",
     desc:"¿En qué medida X incide en Y?",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿En qué medida ${mx} inciden en ${my} ${c}?`),
-    pe:(x,y,c)=>cap(`¿En qué medida ${x} incide en ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Establecer cómo ${mx} inciden en ${my} ${c}.`),
-    oe:(x,y,c)=>cap(`Establecer cómo ${x} incide en ${y} ${c}.`),
-    he:(x,y,c)=>cap(`${x} tiene un efecto directo positivo sobre ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿En qué medida ${mx} inciden en ${my} ${c}?`),
+    pe:(x,y,c)=>t(`¿En qué medida ${x} incide en ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Establecer cómo ${mx} inciden en ${my} ${c}.`),
+    oe:(x,y,c)=>t(`Establecer cómo ${x} incide en ${y} ${c}.`),
+    he:(x,y,c)=>t(`${x} tiene un efecto directo positivo sobre ${y} ${c}.`),
   },
   {
     id:7, short:"De qué manera", ref:"Villanueva",
     desc:"¿De qué manera X incide en Y?",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿De qué manera ${mx} inciden en ${my} ${c}?`),
-    pe:(x,y,c)=>cap(`¿De qué manera ${x} incide en ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Analizar los factores de ${mx} y su incidencia en ${my} ${c}.`),
-    oe:(x,y,c)=>cap(`Analizar ${x} y su incidencia en ${y} ${c}.`),
-    he:(x,y,c)=>cap(`${x} incide en ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿De qué manera ${mx} inciden en ${my} ${c}?`),
+    pe:(x,y,c)=>t(`¿De qué manera ${x} incide en ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Analizar los factores de ${mx} y su incidencia en ${my} ${c}.`),
+    oe:(x,y,c)=>t(`Analizar ${x} y su incidencia en ${y} ${c}.`),
+    he:(x,y,c)=>t(`${x} incide en ${y} ${c}.`),
   },
   {
     id:8, short:"Factores que influyen", ref:"",
     desc:"¿Qué factores de X influyen en Y?",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿Qué factores de ${mx} influyen en ${my} ${c}?`),
-    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Establecer los factores de ${mx} que influyen en ${my} ${c}.`),
-    oe:(x,y,c)=>cap(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
-    he:(x,y,c)=>cap(`Existe una influencia significativa de ${x} sobre ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿Qué factores de ${mx} influyen en ${my} ${c}?`),
+    pe:(x,y,c)=>t(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Establecer los factores de ${mx} que influyen en ${my} ${c}.`),
+    oe:(x,y,c)=>t(`Establecer en qué medida ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>t(`Existe una influencia significativa de ${x} sobre ${y} ${c}.`),
   },
   {
     id:9, short:"Adopción de medidas", ref:"Dimensiones",
     desc:"¿Tiene influencia la adopción de medidas de X en Y?",
     hasGeneral:true,
-    pg:(mx,my,c)=>cap(`¿Tiene una influencia la adopción de medidas de ${mx} en ${my} ${c}?`),
-    pe:(x,y,c,mx)=>cap(`¿Tiene una influencia la adopción de medidas de ${mx} en la dimensión ${x} en ${y} ${c}?`),
-    og:(mx,my,c)=>cap(`Comprobar si ${mx} en todas sus dimensiones tiene una influencia positiva en ${my} ${c}.`),
-    oe:(x,y,c,mx)=>cap(`Comprobar si ${mx} en su dimensión ${x} tiene una influencia positiva en ${y} ${c}.`),
-    he:(x,y,c,mx)=>cap(`La adopción de medidas de ${mx} en su dimensión ${x} tiene una influencia positiva en ${y} ${c}.`),
+    pg:(mx,my,c)=>t(`¿Tiene una influencia la adopción de medidas de ${mx} en ${my} ${c}?`),
+    pe:(x,y,c,mx)=>t(`¿Tiene una influencia la adopción de medidas de ${mx} en la dimensión ${x} en ${y} ${c}?`),
+    og:(mx,my,c)=>t(`Comprobar si ${mx} en todas sus dimensiones tiene una influencia positiva en ${my} ${c}.`),
+    oe:(x,y,c,mx)=>t(`Comprobar si ${mx} en su dimensión ${x} tiene una influencia positiva en ${y} ${c}.`),
+    he:(x,y,c,mx)=>t(`La adopción de medidas de ${mx} en su dimensión ${x} tiene una influencia positiva en ${y} ${c}.`),
   },
   {
     id:10, short:"Eiffel / Mediación", ref:"Basbeth",
     desc:"Modelo con variable mediadora (sin P/O general)",
     hasGeneral:false,
     pg:null,
-    pe:(x,y,c)=>cap(`¿En qué medida ${x} influye en ${y} ${c}?`),
+    pe:(x,y,c)=>t(`¿En qué medida ${x} influye en ${y} ${c}?`),
     og:null,
-    oe:(x,y,c)=>cap(`Establecer cómo ${x} influye en ${y} ${c}.`),
-    he:(x,y,c)=>cap(`${x} tiene un efecto significativo sobre ${y} ${c}.`),
+    oe:(x,y,c)=>t(`Establecer cómo ${x} influye en ${y} ${c}.`),
+    he:(x,y,c)=>t(`${x} tiene un efecto significativo sobre ${y} ${c}.`),
   },
 ];
 
-const IPMA_PE = (my,c)=>cap(`¿Cuál es el constructo que debe priorizarse (del mapa importancia-rendimiento) para mejorar el desempeño del constructo objetivo de ${my} ${c}?`);
-const IPMA_OE = (my,c)=>cap(`Identificar el constructo que debe priorizarse (del mapa importancia-rendimiento) para mejorar el desempeño del constructo objetivo de ${my} ${c}.`);
+const IPMA_PE = (my,c)=>t(`¿Cuál es el constructo que debe priorizarse (del mapa importancia-rendimiento) para mejorar el desempeño del constructo objetivo de ${my} ${c}?`);
+const IPMA_OE = (my,c)=>t(`Identificar el constructo que debe priorizarse (del mapa importancia-rendimiento) para mejorar el desempeño del constructo objetivo de ${my} ${c}.`);
+
+// ── FIX 3: Títulos en formato oración (solo primera letra en mayúscula) ──
+// El CSS text-transform:uppercase los mostrará en mayúsculas en pantalla,
+// pero el texto que se copia tendrá formato oración correcto.
+const TITULOS = {
+  PG : 'Problema general',
+  PE : 'Problemas específicos',
+  OG : 'Objetivo general',
+  OE : 'Objetivos específicos',
+  HE : 'Hipótesis específicas',
+};
 
 // ══════════════════════════════════════════════════════════════════
 // PARES
@@ -413,9 +448,9 @@ function addPair() {
   d.className = 'pair-row';
   d.innerHTML = `
     <span class="pair-num">${n+1}</span>
-    <input type="text" class="var-input var-a" placeholder="Variable X (ej: liderazgo transformacional)">
+    <input type="text" class="var-input var-a" placeholder="Variable X (ej: el liderazgo transformacional)">
     <span class="arrow-lbl">→</span>
-    <input type="text" class="var-input var-b" placeholder="Variable Y (ej: desempeño laboral)">
+    <input type="text" class="var-input var-b" placeholder="Variable Y (ej: el desempeño laboral)">
     <button class="btn-rm" onclick="removePair(this)" title="Eliminar par">✕</button>`;
   c.appendChild(d);
   d.querySelector('.var-a').focus();
@@ -478,12 +513,12 @@ function generate() {
 
   if (!pairsRaw.length) { alert('Ingresa al menos un par de variables con ambos campos completados.'); return; }
 
-  const pairs = pairsRaw.map(([a,b]) => [conArticulo(a), conArticulo(b)]);
+  const pairs = pairsRaw.map(([a,b]) => [a, b]);
 
   const mainARaw = document.getElementById('main-a').value.trim();
   const mainBRaw = document.getElementById('main-b').value.trim();
-  const mainA    = conArticulo(mainARaw);
-  const mainB    = conArticulo(mainBRaw);
+  const mainA    = mainARaw;
+  const mainB    = mainBRaw;
 
   const org     = document.getElementById('ctx-org').value.trim()     || '[organización]';
   const anio    = document.getElementById('ctx-anio').value.trim()    || '[año]';
@@ -505,68 +540,64 @@ function generate() {
     `<div class="out-model-title">Modelo ingresado · ${pairs.length} par(es) · Estilo ${e.id}: ${e.short}</div>${modelHTML}`;
   document.getElementById('out-model').style.display = 'block';
 
-  // ── FIX 3: Títulos en formato oración ──
-  // (el CSS text-transform:uppercase los mostrará en mayúsculas visualmente,
-  //  pero el texto real y el copiado usarán formato oración)
-
   // ── PROBLEMA GENERAL ──
   if (e.hasGeneral && mainA && mainB) {
-    const t = fixDeEl(e.pg(mainA, mainB, ctx));
-    html  += sec('Problema general', `<div class="out-general">${t}</div>`);
-    plain += `Problema general\n${t}\n\n`;
+    const tx = e.pg(mainA, mainB, ctx);
+    html  += sec(TITULOS.PG, `<div class="out-general">${tx}</div>`);
+    plain += `${TITULOS.PG}\n${tx}\n\n`;
   }
 
   // ── PROBLEMAS ESPECÍFICOS ──
   let peHtml='', peText='', n=0;
   pairs.forEach(([a,b])=>{
     n++;
-    const t = fixDeEl(e.id===9 ? e.pe(a,b,ctx,mainARaw2) : e.pe(a,b,ctx));
-    peHtml += `<li>${t}</li>`;
-    peText += `${n}. ${t}\n`;
+    const tx = e.id===9 ? e.pe(a,b,ctx,mainARaw2) : e.pe(a,b,ctx);
+    peHtml += `<li>${tx}</li>`;
+    peText += `${n}. ${tx}\n`;
   });
   if (ipma && selStyle!==10) {
     n++;
-    const t = fixDeEl(IPMA_PE(refY, ctx));
-    peHtml += `<li class="ipma-item">${t}</li>`;
-    peText += `${n}. ${t}\n`;
+    const tx = IPMA_PE(refY, ctx);
+    peHtml += `<li class="ipma-item">${tx}</li>`;
+    peText += `${n}. ${tx}\n`;
   }
-  html  += sec('Problemas específicos', `<ol class="out-list">${peHtml}</ol>`);
-  plain += `Problemas específicos\n${peText}\n`;
+  html  += sec(TITULOS.PE, `<ol class="out-list">${peHtml}</ol>`);
+  plain += `${TITULOS.PE}\n${peText}\n`;
 
   // ── OBJETIVO GENERAL ──
   if (e.hasGeneral && mainA && mainB) {
-    const t = fixDeEl(e.og(mainA, mainB, ctx));
-    html  += sec('Objetivo general', `<div class="out-general">${t}</div>`);
-    plain += `Objetivo general\n${t}\n\n`;
+    const tx = e.og(mainA, mainB, ctx);
+    html  += sec(TITULOS.OG, `<div class="out-general">${tx}</div>`);
+    plain += `${TITULOS.OG}\n${tx}\n\n`;
   }
 
   // ── OBJETIVOS ESPECÍFICOS ──
   let oeHtml='', oeText=''; n=0;
   pairs.forEach(([a,b])=>{
     n++;
-    const t = fixDeEl(e.id===9 ? e.oe(a,b,ctx,mainARaw2) : e.oe(a,b,ctx));
-    oeHtml += `<li>${t}</li>`;
-    oeText += `${n}. ${t}\n`;
+    const tx = e.id===9 ? e.oe(a,b,ctx,mainARaw2) : e.oe(a,b,ctx);
+    oeHtml += `<li>${tx}</li>`;
+    oeText += `${n}. ${tx}\n`;
   });
   if (ipma && selStyle!==10) {
     n++;
-    const t = fixDeEl(IPMA_OE(refY, ctx));
-    oeHtml += `<li class="ipma-item">${t}</li>`;
-    oeText += `${n}. ${t}\n`;
+    const tx = IPMA_OE(refY, ctx);
+    oeHtml += `<li class="ipma-item">${tx}</li>`;
+    oeText += `${n}. ${tx}\n`;
   }
-  html  += sec('Objetivos específicos', `<ol class="out-list">${oeHtml}</ol>`);
-  plain += `Objetivos específicos\n${oeText}\n`;
+  html  += sec(TITULOS.OE, `<ol class="out-list">${oeHtml}</ol>`);
+  plain += `${TITULOS.OE}\n${oeText}\n`;
 
   // ── HIPÓTESIS ESPECÍFICAS ──
   let heHtml='', heText=''; n=0;
   pairs.forEach(([a,b])=>{
     n++;
-    const t = fixDeEl(e.id===9 ? e.he(a,b,ctx,mainARaw2) : e.he(a,b,ctx));
-    heHtml += `<li>${t}</li>`;
-    heText += `${n}. ${t}\n`;
+    const tx = e.id===9 ? e.he(a,b,ctx,mainARaw2) : e.he(a,b,ctx);
+    heHtml += `<li>${tx}</li>`;
+    heText += `${n}. ${tx}\n`;
   });
-  html  += sec('Hipótesis específicas', `<ol class="out-list">${heHtml}</ol>`);
-  plain += `Hipótesis específicas\n${heText}`;
+  html  += sec(TITULOS.HE, `<ol class="out-list">${heHtml}</ol>`);
+  plain += `${TITULOS.HE}\n${heText}`;
 
   document.getElementById('out-content').innerHTML = html;
   document.getElementById('output').dataset.plain = plain;
@@ -586,8 +617,8 @@ function sec(titulo, contenido) {
 // COPY
 // ══════════════════════════════════════════════════════════════════
 function copyAll() {
-  const t = document.getElementById('output').dataset.plain || '';
-  navigator.clipboard.writeText(t).then(()=>{
+  const tx = document.getElementById('output').dataset.plain || '';
+  navigator.clipboard.writeText(tx).then(()=>{
     const m = document.getElementById('copy-ok');
     m.style.display = 'inline';
     setTimeout(()=> m.style.display='none', 2500);
