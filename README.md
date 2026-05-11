@@ -1,1 +1,1 @@
-Genera títulos para un análisis multivariado o PLS SEM basado en un tema central
+Genera preguntas, objetivos e hipótsis para una investigación de  análisis multivariado o PLS SEM
